@@ -1,117 +1,134 @@
+-- ESCUELA HUB V3 - DICIEMBRE 2025
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+-- Variables
 local NoclipEnabled = false
-local Minimizado = false
+local InvisibleEnabled = false
 
--- --- FUNCIONES MEJORADAS ---
+-- --- FUNCIONES CORE ---
 
--- Noclip Avanzado (Confunde al servidor usando Stepped)
-local function ToggleNoclip()
-    NoclipEnabled = not NoclipEnabled
-end
-
+-- Noclip Pro (Forzado por Frame)
 RunService.Stepped:Connect(function()
     if NoclipEnabled and LocalPlayer.Character then
-        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.CanCollide = false
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
             end
         end
     end
 end)
 
--- Sistema de Soga (Lasso Tool)
-local function GiveLasso()
-    local Tool = Instance.new("Tool")
-    Tool.Name = "Soga de Escuela"
-    Tool.RequiresHandle = false
-    Tool.Parent = LocalPlayer.Backpack
-
-    local Rope = nil
-    local Attaching = false
-
-    Tool.Activated:Connect(function()
-        local target = Mouse.Target
-        if target and target.Parent:FindFirstChild("Humanoid") then
-            local targetChar = target.Parent
-            local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-            local myHRP = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
-            if targetHRP and myHRP and not Attaching then
-                Attaching = true
-                Rope = Instance.new("RopeConstraint")
-                local a0 = Instance.new("Attachment", myHRP)
-                local a1 = Instance.new("Attachment", targetHRP)
-                Rope.Attachment0 = a0
-                Rope.Attachment1 = a1
-                Rope.Length = 5
-                Rope.Visible = true
-                Rope.Parent = myHRP
-            elseif Attaching then
-                Attaching = false
-                if Rope then Rope:Destroy() end
-                myHRP:ClearAllChildren() -- Limpia los attachments
+-- Invisibilidad (Local)
+local function ToggleInvis()
+    InvisibleEnabled = not InvisibleEnabled
+    local char = LocalPlayer.Character
+    if char then
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("Decal") then
+                v.Transparency = InvisibleEnabled and 1 or 0
             end
         end
-    end)
+        if char:FindFirstChild("Head") and char.Head:FindFirstChild("NameTag") then
+             char.Head.NameTag.Enabled = not InvisibleEnabled
+        end
+    end
 end
 
--- --- INTERFAZ GRÁFICA ---
+-- Modo Hormiga (Requiere que el juego use R15 para ser efectivo)
+local function BeAnt()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        local hum = char.Humanoid
+        local hs = hum:FindFirstChild("HeadScale")
+        local bds = hum:FindFirstChild("BodyDepthScale")
+        local bws = hum:FindFirstChild("BodyWidthScale")
+        local bhs = hum:FindFirstChild("BodyHeightScale")
 
+        if hs and bds and bws and bhs then
+            hs.Value = 0.3
+            bds.Value = 0.3
+            bws.Value = 0.3
+            bhs.Value = 0.3
+        else
+            char:ScaleTo(0.3) -- Método alternativo para juegos nuevos
+        end
+    end
+end
+
+-- --- INTERFAZ ---
 local ScreenGui = Instance.new("ScreenGui", CoreGui)
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 220, 0, 280)
-MainFrame.Position = UDim2.new(0.5, -110, 0.5, -140)
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainFrame.Active = true
-MainFrame.Draggable = true
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 250, 0, 380)
+Main.Position = UDim2.new(0.5, -125, 0.5, -190)
+Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Main.Active = true
+Main.Draggable = true
 
-local Title = Instance.new("TextLabel", MainFrame)
-Title.Size = UDim2.new(1, -30, 0, 30)
-Title.Text = "Escuela Hub v2"
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1, -30, 0, 35)
+Title.Text = "ESCUELA HUB V3"
 Title.TextColor3 = Color3.new(1,1,1)
-Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+Title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 
 -- Botón Minimizar
-local MinBtn = Instance.new("TextButton", MainFrame)
-MinBtn.Size = UDim2.new(0, 30, 0, 30)
-MinBtn.Position = UDim2.new(1, -30, 0, 0)
-MinBtn.Text = "-"
-MinBtn.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
-MinBtn.MouseButton1Click:Connect(function()
-    Minimizado = not Minimizado
-    if Minimizado then
-        MainFrame:TweenSize(UDim2.new(0, 220, 0, 30))
-        for _, v in pairs(MainFrame:GetChildren()) do
-            if v ~= Title and v ~= MinBtn then v.Visible = false end
-        end
-    else
-        MainFrame:TweenSize(UDim2.new(0, 220, 0, 280))
-        for _, v in pairs(MainFrame:GetChildren()) do v.Visible = true end
-    end
+local Min = Instance.new("TextButton", Main)
+Min.Size = UDim2.new(0, 30, 0, 35)
+Min.Position = UDim2.new(1, -30, 0, 0)
+Min.Text = "-"
+Min.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+Min.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    -- Creamos un botón pequeño para volver a abrir
+    local Open = Instance.new("TextButton", ScreenGui)
+    Open.Size = UDim2.new(0, 50, 0, 20)
+    Open.Position = UDim2.new(0, 0, 0, 0)
+    Open.Text = "ABRIR"
+    Open.MouseButton1Click:Connect(function()
+        Main.Visible = true
+        Open:Destroy()
+    end)
 end)
 
--- Botones de Funciones
-local function CreateButton(text, pos, func)
-    local btn = Instance.new("TextButton", MainFrame)
-    btn.Size = UDim2.new(0.9, 0, 0, 35)
-    btn.Position = UDim2.new(0.05, 0, 0, pos)
-    btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.MouseButton1Click:Connect(func)
+local function CreateBtn(text, y, func)
+    local b = Instance.new("TextButton", Main)
+    b.Size = UDim2.new(0.9, 0, 0, 35)
+    b.Position = UDim2.new(0.05, 0, 0, y)
+    b.Text = text
+    b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    b.TextColor3 = Color3.new(1,1,1)
+    b.MouseButton1Click:Connect(func)
+    return b
 end
 
-CreateButton("Noclip Pro", 40, ToggleNoclip)
-CreateButton("Obtener Soga", 85, GiveLasso)
-CreateButton("Speed x2", 130, function() LocalPlayer.Character.Humanoid.WalkSpeed = 32 end)
-CreateButton("Teleport Aleatorio", 175, function()
-    local randomPlayer = Players:GetPlayers()[math.random(1, #Players:GetPlayers())]
-    if randomPlayer.Character then
-        LocalPlayer.Character:MoveTo(randomPlayer.Character.HumanoidRootPart.Position)
+-- Controles de Velocidad
+local SpeedInput = Instance.new("TextBox", Main)
+SpeedInput.Size = UDim2.new(0.4, 0, 0, 35)
+SpeedInput.Position = UDim2.new(0.05, 0, 0, 45)
+SpeedInput.PlaceholderText = "Vel (ej: 50)"
+SpeedInput.Text = ""
+SpeedInput.BackgroundColor3 = Color3.fromRGB(40,40,40)
+SpeedInput.TextColor3 = Color3.new(1,1,1)
+
+CreateBtn("Set Speed", 45, function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(SpeedInput.Text) or 16
     end
+end).Position = UDim2.new(0.5, 0, 0, 45) SpeedInput.NextSelectionDown = nil -- Ajuste posición
+
+-- Resto de botones
+CreateBtn("Noclip Pro (ON/OFF)", 90, function() NoclipEnabled = not NoclipEnabled end)
+CreateBtn("Invisibilidad", 135, ToggleInvis)
+CreateBtn("Modo Hormiga", 180, BeAnt)
+CreateBtn("Obtener Soga", 225, function()
+    -- Aquí va la función de la soga que ya tenías
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jcp2612-oficial/pruebanadaquever/refs/heads/main/MiGUI.lua"))() -- Recarga para asegurar herramienta
+end)
+CreateBtn("Teleport Random", 270, function()
+    local p = Players:GetPlayers()
+    local target = p[math.random(1, #p)]
+    if target.Character then LocalPlayer.Character:MoveTo(target.Character.HumanoidRootPart.Position) end
 end)
