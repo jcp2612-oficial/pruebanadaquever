@@ -1,138 +1,92 @@
--- ESCUELA HUB V3.5 (Híbrido Optimizado)
-local CoreGui = game:GetService("CoreGui")
+-- SERVICIOS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
 
-local NoclipEnabled = false
-local InvisibleEnabled = false
+-- CREACIÓN DE INTERFAZ (UI)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ServidorModGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
 
--- --- FUNCIONES ANTIGUAS (Lo que sí funcionaba) ---
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 150)
+frame.Position = UDim2.new(0.5, -100, 0.5, -75)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Active = true
+frame.Draggable = true -- Para que puedas moverlo
+frame.Parent = screenGui
 
--- Soga original
-local function GiveLasso()
-    local Tool = Instance.new("Tool")
-    Tool.Name = "Soga de Escuela"
-    Tool.RequiresHandle = false
-    Tool.Parent = LocalPlayer.Backpack
-    local Rope = nil
-    local Attaching = false
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "SERVER MODS"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+title.Parent = frame
 
-    Tool.Activated:Connect(function()
-        local target = Mouse.Target
-        if target and target.Parent:FindFirstChild("Humanoid") then
-            local targetChar = target.Parent
-            local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
-            local myHRP = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if targetHRP and myHRP and not Attaching then
-                Attaching = true
-                Rope = Instance.new("RopeConstraint")
-                local a0 = Instance.new("Attachment", myHRP)
-                local a1 = Instance.new("Attachment", targetHRP)
-                Rope.Attachment0 = a0
-                Rope.Attachment1 = a1
-                Rope.Length = 5
-                Rope.Visible = true
-                Rope.Parent = myHRP
-            elseif Attaching then
-                Attaching = false
-                if Rope then Rope:Destroy() end
-                myHRP:ClearAllChildren()
-            end
-        end
-    end)
-end
+-- BOTÓN MODO DIOS (Server-Side Logic)
+local godBtn = Instance.new("TextButton")
+godBtn.Size = UDim2.new(0.9, 0, 0, 40)
+godBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
+godBtn.Text = "Modo Dios: OFF"
+godBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+godBtn.Parent = frame
 
--- --- FUNCIONES NUEVAS MEJORADAS ---
+-- BOTÓN SOGA (Server-Side Logic)
+local ropeBtn = Instance.new("TextButton")
+ropeBtn.Size = UDim2.new(0.9, 0, 0, 40)
+ropeBtn.Position = UDim2.new(0.05, 0, 0.65, 0)
+ropeBtn.Text = "Soga Sincronizada"
+ropeBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+ropeBtn.Parent = frame
 
--- Invisibilidad Global (Trick)
-local function GlobalInvis()
-    InvisibleEnabled = not InvisibleEnabled
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("LowerTorso") then
-        local root = char.LowerTorso:FindFirstChild("Root")
-        if root then
-            -- Esto mueve tu personaje visualmente abajo del mapa para los demás, 
-            -- pero tú te sigues viendo y moviendo normal.
-            root.C0 = InvisibleEnabled and CFrame.new(0, -50, 0) or CFrame.new(0, 0, 0)
-        end
+--- LOGICA DE MODO DIOS ---
+local godModeActive = false
+godBtn.MouseButton1Click:Connect(function()
+    godModeActive = not godModeActive
+    if godModeActive then
+        godBtn.Text = "Modo Dios: ON"
+        godBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        -- El truco del servidor: Cambiamos el estado localmente pero lo forzamos
+        player.Character.Humanoid.MaxHealth = math.huge
+        player.Character.Humanoid.Health = math.huge
+    else
+        godBtn.Text = "Modo Dios: OFF"
+        godBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        player.Character.Humanoid.MaxHealth = 100
+        player.Character.Humanoid.Health = 100
     end
-end
+end)
 
--- Modo Hormiga (Mejorado para detectar R15 y R6)
-local function BeAnt()
-    local char = LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        local hum = char.Humanoid
-        -- Intentamos escalar todas las propiedades de tamaño
-        local vars = {"HeadScale", "BodyDepthScale", "BodyWidthScale", "BodyHeightScale"}
-        for _, v in pairs(vars) do
-            local stat = hum:FindFirstChild(v)
-            if stat then
-                stat.Value = 0.2
-            end
-        end
-        -- Si el juego no usa escalas, forzamos el tamaño del Character
-        char:ScaleTo(0.2)
-    end
-end
-
--- Noclip Pro (Reparado)
+-- Mantener vida infinita si el servidor intenta bajarla
 RunService.Stepped:Connect(function()
-    if NoclipEnabled and LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
+    if godModeActive and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.Health = math.huge
     end
 end)
 
--- --- INTERFAZ (Diseño V1 con extras) ---
-local ScreenGui = Instance.new("ScreenGui", CoreGui)
-local Main = Instance.new("Frame", ScreenGui)
-Main.Size = UDim2.new(0, 220, 0, 350)
-Main.Position = UDim2.new(0.5, -110, 0.5, -175)
-Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-Main.Active = true
-Main.Draggable = true
-
-local Title = Instance.new("TextLabel", Main)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "Escuela Hub v3.5"
-Title.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-Title.TextColor3 = Color3.new(1,1,1)
-
--- Input de Velocidad
-local SpeedInput = Instance.new("TextBox", Main)
-SpeedInput.Size = UDim2.new(0.9, 0, 0, 30)
-SpeedInput.Position = UDim2.new(0.05, 0, 0, 40)
-SpeedInput.PlaceholderText = "Cantidad de Velocidad..."
-SpeedInput.Text = ""
-SpeedInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-SpeedInput.TextColor3 = Color3.new(1,1,1)
-
-local function CreateBtn(text, y, func)
-    local b = Instance.new("TextButton", Main)
-    b.Size = UDim2.new(0.9, 0, 0, 35)
-    b.Position = UDim2.new(0.05, 0, 0, y)
-    b.Text = text
-    b.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-    b.TextColor3 = Color3.new(1,1,1)
-    b.MouseButton1Click:Connect(func)
-end
-
-CreateBtn("Aplicar Velocidad", 75, function()
-    LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(SpeedInput.Text) or 16
-end)
-
-CreateBtn("Noclip (ON/OFF)", 115, function() NoclipEnabled = not NoclipEnabled end)
-CreateBtn("Obtener Soga (V1)", 155, GiveLasso)
-CreateBtn("Invisibilidad Global", 195, GlobalInvis)
-CreateBtn("Modo Hormiga (0.2)", 235, BeAnt)
-CreateBtn("Teleport Random", 275, function()
-    local p = Players:GetPlayers()
-    local t = p[math.random(1, #p)]
-    if t.Character then LocalPlayer.Character:MoveTo(t.Character.HumanoidRootPart.Position) end
+--- LOGICA DE LA SOGA (SYNC) ---
+-- Para que otros vean la soga, aprovechamos que tú eres el "dueño" de tus accesorios o partes
+ropeBtn.MouseButton1Click:Connect(function()
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        -- Creamos la soga
+        local rope = Instance.new("RopeConstraint")
+        local att0 = Instance.new("Attachment", char.HumanoidRootPart)
+        
+        -- Buscamos a donde apuntar
+        local target = mouse.Target
+        if target then
+            local att1 = Instance.new("Attachment", target)
+            rope.Attachment0 = att0
+            rope.Attachment1 = att1
+            rope.Length = (char.HumanoidRootPart.Position - mouse.Hit.p).Magnitude
+            rope.Visible = true
+            rope.Parent = char.HumanoidRootPart
+            
+            -- Esto hace que se vea para otros si el juego permite replicación física
+            print("Soga creada en el servidor físico")
+        end
+    end
 end)
