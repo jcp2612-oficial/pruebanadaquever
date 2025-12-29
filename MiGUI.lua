@@ -1,117 +1,93 @@
--- RE-CONSTRUCCIÓN TOTAL
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
+local mouse = player:GetMouse()
 
--- UI RETRO ROBUSTA
-local sg = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-sg.Name = "FixedRetro"
-
+-- INTERFAZ NEGRA RETRO
+local sg = Instance.new("ScreenGui", player.PlayerGui)
 local main = Instance.new("Frame", sg)
-main.Size = UDim2.new(0, 200, 0, 180)
-main.Position = UDim2.new(0.5, -100, 0.2, 0)
-main.BackgroundColor3 = Color3.new(0,0,0)
+main.Size = UDim2.new(0, 180, 0, 140)
+main.Position = UDim2.new(0.5, -90, 0.3, 0)
+main.BackgroundColor3 = Color3.new(0, 0, 0)
 main.BorderSizePixel = 2
 main.BorderColor3 = Color3.fromRGB(0, 255, 0)
+main.Active = true
+main.Draggable = true
 
 local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 30)
+title.Size = UDim2.new(1, 0, 0, 25)
 title.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-title.TextColor3 = Color3.new(0,0,0)
-title.Text = "FORCE ADMIN v2"
-title.Font = "Code"
+title.Text = "FORCE ADMIN"
+title.TextColor3 = Color3.new(0, 0, 0)
 
--- MODO DIOS MEJORADO (FUERZA BRUTA)
+-- BOTÓN CERRAR
+local close = Instance.new("TextButton", main)
+close.Size = UDim2.new(0, 25, 0, 25)
+close.Position = UDim2.new(1, -25, 0, 0)
+close.Text = "X"
+close.BackgroundColor3 = Color3.new(0.5, 0, 0)
+close.TextColor3 = Color3.new(1, 1, 1)
+close.MouseButton1Click:Connect(function() sg:Destroy() end)
+
+-- MODO DIOS (VIDA INFINITA)
 local godBtn = Instance.new("TextButton", main)
-godBtn.Size = UDim2.new(0.8, 0, 0, 40)
-godBtn.Position = UDim2.new(0.1, 0, 0.25, 0)
+godBtn.Size = UDim2.new(0.9, 0, 0, 35)
+godBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
 godBtn.Text = "GOD: OFF"
-godBtn.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
-godBtn.TextColor3 = Color3.new(1,1,1)
+godBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+godBtn.TextColor3 = Color3.new(1, 1, 1)
 
 local godActive = false
 godBtn.MouseButton1Click:Connect(function()
     godActive = not godActive
     godBtn.Text = godActive and "GOD: ON" or "GOD: OFF"
-    godBtn.TextColor3 = godActive and Color3.new(0,1,0) or Color3.new(1,1,1)
+    godBtn.TextColor3 = godActive and Color3.new(0, 1, 0) or Color3.new(1, 1, 1)
 end)
 
--- Bucle de vida (No puede morir)
-RunService.RenderStepped:Connect(function()
-    if godActive then
-        local char = player.Character
-        if char and char:FindFirstChild("Humanoid") then
-            char.Humanoid.Health = 100 -- Te mantiene vivo constantemente
-            char.Humanoid.MaxHealth = 100
-            -- Evita que te maten por "Void" o scripts de daño
-            if char.Humanoid:GetState() == Enum.HumanoidStateType.Dead then
-                char.Humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+-- Bucle de Vida (Simple y efectivo)
+spawn(function()
+    while true do
+        if godActive then
+            local char = player.Character
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.MaxHealth = 9e9 -- Numero gigante
+                char.Humanoid.Health = 9e9
             end
         end
+        wait(0.1) -- No causa lag y mantiene la vida arriba
     end
 end)
 
--- SOGA TOOL (MEJORADA)
+-- SOGA TOOL
 local sogaBtn = Instance.new("TextButton", main)
-sogaBtn.Size = UDim2.new(0.8, 0, 0, 40)
-sogaBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
+sogaBtn.Size = UDim2.new(0.9, 0, 0, 35)
+sogaBtn.Position = UDim2.new(0.05, 0, 0.65, 0)
 sogaBtn.Text = "DAR SOGA"
-sogaBtn.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
-sogaBtn.TextColor3 = Color3.new(1,1,1)
+sogaBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+sogaBtn.TextColor3 = Color3.new(1, 1, 1)
 
 sogaBtn.MouseButton1Click:Connect(function()
     local tool = Instance.new("Tool")
-    tool.Name = "Soga Retro"
+    tool.Name = "Soga"
     tool.RequiresHandle = true
-    
-    local handle = Instance.new("Part", tool)
-    handle.Name = "Handle"
-    handle.Size = Vector3.new(1,1,1)
-    handle.Color = Color3.new(0,1,0)
+    local h = Instance.new("Part", tool)
+    h.Name = "Handle"
+    h.Size = Vector3.new(1, 1, 1)
     
     tool.Activated:Connect(function()
-        local mouse = player:GetMouse()
         local target = mouse.Target
         if target and target.Parent:FindFirstChild("Humanoid") then
             local enemyRoot = target.Parent:FindFirstChild("HumanoidRootPart")
             local myRoot = player.Character:FindFirstChild("HumanoidRootPart")
-            
             if enemyRoot and myRoot then
-                -- Crear Soga que todos ven
-                local att1 = Instance.new("Attachment", myRoot)
-                local att2 = Instance.new("Attachment", enemyRoot)
                 local rope = Instance.new("RopeConstraint", myRoot)
-                rope.Attachment0 = att1
-                rope.Attachment1 = att2
-                rope.Length = 5
+                local a0 = Instance.new("Attachment", myRoot)
+                local a1 = Instance.new("Attachment", enemyRoot)
+                rope.Attachment0 = a0
+                rope.Attachment1 = a1
+                rope.Length = 7
                 rope.Visible = true
-                rope.Color = BrickColor.new("Bright green")
-                rope.Thickness = 0.2
             end
         end
     end)
     tool.Parent = player.Backpack
-end)
-
--- BOTÓN CERRAR/ABRIR (Para Celular)
-local close = Instance.new("TextButton", main)
-close.Size = UDim2.new(0, 25, 0, 25)
-close.Position = UDim2.new(1, -25, 0, 0)
-close.Text = "X"
-close.BackgroundColor3 = Color3.new(1,0,0)
-
-local openBtn = Instance.new("TextButton", sg)
-openBtn.Size = UDim2.new(0, 40, 0, 40)
-openBtn.Position = UDim2.new(0, 0, 0.5, 0)
-openBtn.Text = "MENU"
-openBtn.Visible = false
-
-close.MouseButton1Click:Connect(function()
-    main.Visible = false
-    openBtn.Visible = true
-end)
-
-openBtn.MouseButton1Click:Connect(function()
-    main.Visible = true
-    openBtn.Visible = false
 end)
